@@ -1,13 +1,26 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const mongoose = require("mongoose");
 
-const Infrastructure = sequelize.define("Infrastructure", {
-  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  name: { type: DataTypes.STRING, allowNull: false },
-  location: { type: DataTypes.STRING, allowNull: false },
-  capacity: { type: DataTypes.INTEGER, allowNull: false },
-  availability: { type: DataTypes.BOOLEAN, defaultValue: true },
-  operatingHours: { type: DataTypes.STRING, allowNull: false }, // Example: "06:00-22:00"
-});
+const InfrastructureSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  location: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["available", "not available", "under maintenance"],
+    default: "available",
+  },
+  capacity: {
+    type: Number,
+    required: true,
+  },
+}, { timestamps: true });
 
-module.exports = Infrastructure;
+module.exports = mongoose.model("Infrastructure", InfrastructureSchema);
+
+

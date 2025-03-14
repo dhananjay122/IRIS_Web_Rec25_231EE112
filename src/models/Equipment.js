@@ -1,13 +1,15 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const mongoose = require("mongoose");
 
-const Equipment = sequelize.define("Equipment", {
-  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
-  name: { type: DataTypes.STRING, allowNull: false },
-  category: { type: DataTypes.STRING, allowNull: false },
-  quantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
-  available: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },  // Number available for booking
-  condition: { type: DataTypes.ENUM("new", "good", "damaged"), defaultValue: "good" },
+const EquipmentSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  status: { type: String, enum: ["available", "not available", "under maintenance"], default: "available" },
 });
 
-module.exports = Equipment;
+module.exports = mongoose.model("Equipment", EquipmentSchema);
+
+
+
+
+

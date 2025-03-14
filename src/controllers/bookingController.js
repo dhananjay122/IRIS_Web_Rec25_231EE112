@@ -1,55 +1,108 @@
 const Booking = require("../models/Booking");
-const Equipment = require("../models/Equipment");
 const Infrastructure = require("../models/Infrastructure");
 
-// Create a booking (student request)
-exports.createBooking = async (req, res) => {
+// Request a booking
+exports.requestBooking = async (req, res) => {
   try {
-    const { equipmentId, infraId, date, startTime, endTime } = req.body;
-    const userId = req.user.id;
+    const { infrastructureName, date, timeSlot } = req.body;
+    const userId = req.user.id; // Extract user ID from the logged-in user
 
-    if (!equipmentId && !infraId) return res.status(400).json({ message: "Specify either equipment or infrastructure" });
+    // Check if the infrastructure exists
+    const infrastructure = await Infrastructure.findOne({ name: infrastructureName });
+    if (!infrastructure) {
+      return res.status(404).json({ error: "Infrastructure not found" });
+    }
 
-    const booking = await Booking.create({ userId, equipmentId, infraId, date, startTime, endTime });
+    // Check if the slot is already booked
+    const existingBooking = await Booking.findOne({ infrastructure: infrastructure._id, date, timeSlot, status: "approved" });
+    if (existingBooking) {
+      return res.status(400).json({ error: "Slot already booked" });
+    }
+
+    // Create a new booking request
+    const booking = new Booking({
+      user: userId,
+      infrastructure: infrastructure._id,
+      date,
+      timeSlot,
+      status: "pending", // Default status is pending
+    });
+
+    await booking.save();
     res.status(201).json({ message: "Booking request submitted", booking });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
-// Admin approves or rejects a booking
-exports.updateBookingStatus = async (req, res) => {
+// Approve a booking
+exports.approveBooking = async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!["approved", "rejected"].includes(status)) return res.status(400).json({ message: "Invalid status" });
+    const { requestId } = req.params;
+    const booking = await Booking.findByIdAndUpdate(requestId, { status: "approved" }, { new: true });
 
-    const booking = await Booking.findByPk(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      return res.status(404).json({ error: "Booking request not found" });
+    }
 
-    booking.status = status;
-    await booking.save();
-    res.json({ message: `Booking ${status}`, booking });
+    res.json({ message: "Booking approved", booking });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
-// Get all bookings (admin view)
-exports.getAllBookings = async (req, res) => {
+// Reject a booking with admin comments
+exports.rejectBooking = async (req, res) => {
   try {
-    const bookings = await Booking.findAll({ include: [Equipment, Infrastructure] });
-    res.json(bookings);
+    const { requestId } = req.params;
+    const { adminComment } = req.body;
+    
+    const booking = await Booking.findByIdAndUpdate(
+      requestId,
+      { status: "rejected", adminComment },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking request not found" });
+    }
+
+    res.json({ message: "Booking rejected", booking });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
-// Get user's bookings
+// Cancel a booking (student can cancel, admin may need to approve)
+exports.cancelBooking = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const booking = await Booking.findByIdAndUpdate(
+      requestId,
+      { status: "canceled" },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    res.json({ message: "Booking canceled", booking });
+  } catch (error) {
+    res.status(500).json({ error: "Server Error" });
+  }
+};
+
+// Get all bookings for a user
 exports.getUserBookings = async (req, res) => {
   try {
-    const bookings = await Booking.findAll({ where: { userId: req.user.id }, include: [Equipment, Infrastructure] });
-    res.json(bookings);
+    const userId = req.user.id;
+    const bookings = await Booking.find({ user: userId }).populate("infrastructure");
+
+    res.json({ bookings });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Server Error" });
   }
 };
+
+
