@@ -4,34 +4,47 @@ const Equipment = require("../models/Equipment");
 // Student submits equipment request
 // Request Equipment
 exports.requestEquipment = async (req, res) => {
-    try {
-      const { rollNumber, equipmentName, quantity } = req.body;
-  
-      // Find the user using rollNumber
-      const user = await User.findOne({ rollNumber });
-      if (!user) return res.status(404).json({ error: "User not found" });
-  
-      // Find the requested equipment
-      const equipment = await Equipment.findOne({ name: equipmentName });
-      if (!equipment || equipment.quantity < quantity) {
-        return res.status(400).json({ error: "Insufficient quantity or equipment not available" });
-      }
-  
-      // Create the booking request
-      const newBooking = new Booking({
-        userId: user._id,
-        itemType: "equipment",
-        itemId: equipment._id,
-        quantity,
-        status: "pending",
-      });
-  
-      await newBooking.save();
-      res.status(201).json({ message: "Request submitted successfully", newBooking });
-    } catch (error) {
-      res.status(500).json({ error: "Server Error" });
+  try {
+    console.log("Request received:", req.body);
+
+    const { rollNumber, equipmentName, quantity, duration } = req.body;
+
+    if (!rollNumber || !equipmentName || !quantity || !duration) {
+      return res.status(400).json({ error: "All fields are required" });
     }
-  };
+
+    // Find the requested equipment
+    const equipment = await Equipment.findOne({ name: equipmentName });
+
+    if (!equipment) {
+      return res.status(404).json({ error: "Equipment not found" });
+    }
+
+    if (equipment.quantity < quantity) {
+      return res.status(400).json({ error: "Insufficient quantity available" });
+    }
+
+    console.log("Equipment available:", equipment);
+
+    // Create a new equipment request
+    const newRequest = new EquipmentRequest({
+      user: req.user.id, // Assuming authentication middleware attaches req.user
+      rollNumber,
+      equipmentName,
+      quantity,
+      duration,
+      status: "pending",
+    });
+
+    await newRequest.save();
+    console.log("Equipment request created:", newRequest);
+
+    res.status(201).json({ message: "Request submitted successfully", request: newRequest });
+  } catch (error) {
+    console.error("Server Error:", error.message, error.stack);
+    res.status(500).json({ error: "Server Error", details: error.message });
+  }
+};
 
 // Admin approves/rejects request
 exports.reviewEquipmentRequest = async (req, res) => {
@@ -75,18 +88,20 @@ exports.reviewEquipmentRequest = async (req, res) => {
 // Get all requests (Student/Admin)
 exports.getRequests = async (req, res) => {
   try {
-    let filter = {};
-    if (req.user.role === "student") {
-      filter.student = req.user.id;
+    console.log("Fetching requests for user:", req.user);
+    
+    let requests;
+    if (req.user.role === "admin") {
+      requests = await EquipmentRequest.find(); // Admin sees all requests
+    } else {
+      requests = await EquipmentRequest.find({ user: req.user._id });
     }
 
-    const requests = await EquipmentRequest.find(filter)
-      .populate("student", "name email")
-      .populate("equipment", "name category")
-      .sort({ requestDate: -1 });
-
+    console.log("Fetched Requests:", requests); // Debugging
     res.json(requests);
   } catch (error) {
-    res.status(500).json({ error: "Server Error" });
+    console.error("Error fetching requests:", error);
+    res.status(500).json({ message: "Server error", details: error.message });
   }
 };
+
