@@ -13,10 +13,18 @@ const Login = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
+
       const data = await res.json();
+      
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        navigate("/dashboard");
+        localStorage.setItem("user", JSON.stringify(data.user)); // Store user info
+        
+        if (data.user.role === "admin") {
+          navigate("/admin-dashboard"); // Redirect admin
+        } else {
+          navigate("/dashboard"); // Redirect student
+        }
       } else {
         alert(data.message);
       }
@@ -69,6 +77,7 @@ const Login = () => {
 };
 
 export default Login;
+
 
 
 

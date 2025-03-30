@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 
 import BookingsPage from "./pages/BookingsPage";
 import Requests from "./pages/Requests";
+import AdminDashboard from "./pages/AdminDashboard";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Router>
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/dashboard" element={<Dashboard />} />
        <Route path="/requests" element={<Requests />} />
         <Route path="/booking" element={<BookingsPage />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard/>}/>
       </Routes>
     </Router>
   </React.StrictMode>

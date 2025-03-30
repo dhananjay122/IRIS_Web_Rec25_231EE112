@@ -94,7 +94,7 @@ const Register = () => {
             >
               <option value="student">Student</option>
               <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
+              
             </select>
           </div>
           <button type="submit" className="btn btn-success w-100">Register</button>

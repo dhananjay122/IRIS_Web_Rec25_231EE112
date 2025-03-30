@@ -44,17 +44,16 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email only
+    // Find user by email
     const user = await User.findOne({ email });
-
     if (!user) {
-      return res.status(400).json({ error: "User not found" });
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: "Invalid password" });
+      return res.status(400).json({ error: "Invalid credentials" });
     }
 
     // Generate JWT token
@@ -67,7 +66,7 @@ exports.login = async (req, res) => {
     res.json({ 
       message: "Login successful", 
       token, 
-      user: { name: user.name, email: user.email, branch: user.branch, role: user.role } 
+      user: { id: user._id, name: user.name, email: user.email, branch: user.branch, role: user.role } 
     });
 
   } catch (error) {

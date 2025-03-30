@@ -13,6 +13,20 @@ exports.requestEquipment = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if the user has already requested equipment today
+    const existingRequest = await EquipmentRequest.findOne({
+      rollNumber,
+      requestDate: { $gte: today }, // Check for requests made today
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ error: "You can only request equipment once per day" });
+    }
+
     // Find the requested equipment
     const equipment = await Equipment.findOne({ name: equipmentName });
 
@@ -34,6 +48,7 @@ exports.requestEquipment = async (req, res) => {
       quantity,
       duration,
       status: "pending",
+      requestDate: new Date(), // Store request date
     });
 
     await newRequest.save();

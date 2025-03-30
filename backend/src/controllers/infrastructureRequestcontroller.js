@@ -11,12 +11,27 @@ exports.requestInfrastructure = async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if the user has already requested for today
+    const existingRequest = await InfrastructureRequest.findOne({
+      rollNumber,
+      requestDate: { $gte: today }, // Check for requests made today
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ error: "You can only request infrastructure once per day" });
+    }
+
     // Create the infrastructure request
     const newRequest = new InfrastructureRequest({
       rollNumber,
       infrastructureName,
       duration,
       status: "pending",
+      requestDate: new Date(), // Store request date
     });
 
     await newRequest.save();
