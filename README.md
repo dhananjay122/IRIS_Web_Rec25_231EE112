@@ -1,4 +1,4 @@
-# NITK Sports Booking System
+# NITK Sports and Infrastrucutre Booking System
 
 ## Overview
 The **NITK Sports Booking System** is a web-based platform that enables students to book sports infrastructure and equipment at NITK. The system includes role-based access control (RBAC), equipment management, infrastructure booking, waitlists, penalties, analytics, notifications, and real-time availability updates via WebSockets.
