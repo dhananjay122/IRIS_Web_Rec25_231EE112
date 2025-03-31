@@ -70,6 +70,7 @@ http://localhost:5173
 ```
 ## Demo Video
 [Watch the Demo](Demo.mkv)
+Open and View Raw it will download demo video to your local storage then view it.
 
 ## Contribution Guidelines
 1. Fork the repository.
