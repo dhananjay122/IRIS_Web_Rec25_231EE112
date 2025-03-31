@@ -68,6 +68,8 @@ Once both the frontend and backend servers are running, access the application a
 ```
 http://localhost:5173
 ```
+## Demo Video
+[Watch the Demo](Demo.mkv)
 
 ## Contribution Guidelines
 1. Fork the repository.
